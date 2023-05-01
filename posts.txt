@@ -1,0 +1,4 @@
+/sendImage
+/sendVideo
+/registartion
+/check_cashback_status
