@@ -1,12 +1,15 @@
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 import logging
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove,  KeyboardButton
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove,  KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
 from utils import build_menu
 import os
+import requests
 
+url = "http://62.217.183.218:8000/api"
 # Словарь, в котором будут храниться пользователи и их данные
 users = {}
+BACK_KEYBOARD = ReplyKeyboardMarkup([['Назад']])
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -37,6 +40,7 @@ def start(update: Update, context: CallbackContext) -> None:
                 chat_id=user.id, text="Напиши мне свой номер телефона")
         else:
             context.bot.send_message(chat_id=user.id, text="С возвращением!")
+
 
 def register_phone(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
@@ -106,7 +110,18 @@ def back_to_menu(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text="Выберите нужный пункт меню", reply_markup=reply_markup)
         context.user_data["previous_menu"] = "back_to_menu"
+
+    # Удаляем текущее меню
+    context.bot.delete_message(chat_id=update.effective_chat.id,
+                               message_id=update.effective_message.message_id)
+
+    # Отправляем предыдущее меню
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text='Выберите действие:',
+                             reply_markup=some_strings + [['Назад']])
+
     context.user_data["previous_menu"] = "main_menu"
+
 
 def receive_cashback(update: Update, context: CallbackContext) -> None:
     if update.message.text == "Отправить фото подтверждения покупки":
@@ -127,8 +142,8 @@ def receive_cashback(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text="Для получения кэшбека выберите доступный кэшбек и начните процесс подтверждения покупки и получения заказа.", reply_markup=reply_markup)
         context.user_data["previous_menu"] = "cashback_menu"
-    context.dispatcher.add_handler(
-        MessageHandler(Filters.text("Назад"), back_to_menu))
+    elif update.message.text == "Назад":
+        back_to_menu(update, context)
 
 
 def cancel_request_data(context: CallbackContext) -> None:
@@ -156,4 +171,3 @@ def button_callback(update: Update, context: CallbackContext) -> None:
         status_message = "Статус проверки кэшбека: В обработке"
         context.bot.send_message(
             chat_id=query.message.chat_id, text=status_message)
-
