@@ -2,9 +2,10 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton
 import logging
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove,  KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
+from telegram.ext.callbackcontext import CallbackContext
 from utils import build_menu
 import os
-import requests
+# import requests
 
 url = "http://62.217.183.218:8000/api"
 # Словарь, в котором будут храниться пользователи и их данные
