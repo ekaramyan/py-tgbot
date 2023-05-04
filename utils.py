@@ -1,7 +1,69 @@
 from typing import List
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext.callbackcontext import CallbackContext
+from telegram.ext import CallbackContext
 import logging
+import requests
+
+HEADERS = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json',
+}
+
+URL = 'http://62.217.183.218:8000/api'
+
+
+def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: str, creditCartNumber: str, tgNickname: str, bannedText: str):
+
+    json_data = {
+        'firstName': firstName,
+        'lastName': lastName,
+        'middleName': middleName,
+        'phoneNumber': phoneNumber,
+        'creditCartNumber': creditCartNumber,
+        'tgNickname': tgNickname,
+        'isBanned': True,
+        'bannedText': bannedText,
+    }
+
+    response = requests.post(URL + '/cashbacks/users',
+                             headers=HEADERS, json=json_data)
+
+    return response
+
+
+def get_cashbacks(status_id: int, limit: int, page: int):
+
+    params = {
+        'status_id': status_id,
+        'limit': limit,
+        'page': page,
+    }
+
+    response = requests.get(URL + '/cashbacks', params=params, headers=HEADERS)
+
+    return response
+
+
+def cashbacks_users_history(id: int, limit: int, page: int):
+
+    params = {
+        'limit': limit,
+        'page': page,
+    }
+
+    response = requests.get(
+        URL + '/cashbacks/users/{0}/history'.format(id), params=params, headers=HEADERS)
+
+    return response
+
+
+# print(register_user('test', 0, 'test', 'test1', 'test2', 'test@gmail.com', 'test', '3456789', 'test').text) #вызывает ошибку
+
+
+# files = {'media': open(r'./files/file_0.jpg', 'rb')} #вызывает ошибку
+
+# print(requests.post(URL, files=files)) #вызывает ошибку
+
 
 # заглушка для отправки запроса к API
 
