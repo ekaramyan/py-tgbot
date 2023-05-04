@@ -4,6 +4,7 @@ from telegram.ext import CallbackContext
 import logging
 import requests
 
+
 HEADERS = {
     'accept': 'application/json',
     'Content-Type': 'application/json',

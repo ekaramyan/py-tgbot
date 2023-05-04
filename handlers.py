@@ -1,7 +1,8 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import CallbackContext, MessageHandler, Filters
+from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler, Updater
 from utils import build_menu
+from registrtation import NAME, PHONE_NUMBER, CARD_NUMBER, FINISH, start_registration, get_name, get_phone_number, get_card_number, cancel_registration
 import os
 
 # Словарь, в котором будут храниться пользователи и их данные
@@ -77,31 +78,22 @@ def start(update: Update, context: CallbackContext) -> None:
         if user.id not in users:
             users[user.id] = {"name": user.first_name, "phone": None}
             context.bot.send_message(
-                chat_id=user.id, text="Напиши мне свой номер телефона")
+                chat_id=user.id, text="Перед началом работы необходимо зарегестрироваться командой /registration")
         else:
             context.bot.send_message(chat_id=user.id, text="С возвращением!")
 
 
-"""
-где используеться?
-нужно не только номер
-"""
-
-
-def register_phone(update: Update, context: CallbackContext) -> None:
-    user_id = update.effective_user.id
-    if user_id not in users:
-        context.bot.send_message(
-            chat_id=user_id, text="Сначала напиши /start, чтобы зарегистрироваться.")
-    else:
-        try:
-            phone = int(update.message.text)
-            users[user_id]["phone"] = phone
-            context.bot.send_message(
-                chat_id=user_id, text="Спасибо! Теперь можем приступить к получению кэшбека, твой номер телефона: {}.".format(phone))
-        except ValueError:
-            context.bot.send_message(
-                chat_id=user_id, text="Напиши свой номер телефона цифрами, пожалуйста.")
+def register_handler() -> ConversationHandler:
+    return ConversationHandler(
+        entry_points=[CommandHandler('registration', start_registration)],
+        states={
+            NAME: [MessageHandler(Filters.text & ~Filters.command, get_name)],
+            PHONE_NUMBER: [MessageHandler(Filters.text & ~Filters.command, get_phone_number)],
+            CARD_NUMBER: [MessageHandler(Filters.text & ~Filters.command, get_card_number)],
+            FINISH: [MessageHandler(
+                Filters.text & ~Filters.command, cancel_registration)]
+        },
+        fallbacks=[CommandHandler('cancel', cancel_registration)])
 
 
 def cashback_menu(update: Update, context: CallbackContext, reply_markup=None) -> None:
@@ -158,6 +150,14 @@ def receive_cashback(update: Update, context: CallbackContext) -> None:
         context.job_queue.run_once(cancel_request_data, 60, context=[
             update.message.chat_id, update.message.message_id])
 
+    elif update.message.text == "Отправить видео подтверждения получения":
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Отправьте видео подтверждения получения товара, желательно, где ввы отрезаете этикетку, чтобы мы были уверене, что не будет возврата товара")
+        context.dispatcher.add_handler(
+            MessageHandler(Filters.photo, receive_photo))
+
+        context.job_queue.run_once(cancel_request_data, 60, context=[
+            update.message.chat_id, update.message.message_id])
     elif update.message.text == "Кэшбеки":
 
         reply_markup = ReplyKeyboardMarkup(build_menu(
