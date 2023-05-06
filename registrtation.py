@@ -9,9 +9,12 @@ from telegram.ext import (
 )
 from phonenumbers import parse, PhoneNumberFormat
 import re
+import utils
+from menu import main_menu
+
 
 # Определяем константы для состояний
-NAME, PHONE_NUMBER, CARD_NUMBER, FINISH = range(4)
+NAME, PHONE_NUMBER, CARD_NUMBER, TG_NICK, FINISH = range(5)
 
 
 CARD_NUMBER_REGEX = re.compile(r'^\d{16}$')
@@ -23,11 +26,27 @@ def validate_card_number(card_number: str) -> bool:
 
 def start_registration(update: Update, context: CallbackContext) -> int:
     # Переходим в состояние NAME и запрашиваем ФИО
+    context.user_data["is_registered"] = False
     update.message.reply_text(
         'Для регистрации введите свои ФИО:',
         reply_markup=ReplyKeyboardRemove()
     )
     return NAME
+
+
+def finish_registration(update: Update, context: CallbackContext) -> int:
+    if not context.user_data.get("is_registered"):
+        context.user_data["is_registered"] = True
+        update.message.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Регистрация завершена. Спасибо за регистрацию!'
+        )
+    else:
+        update.message.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Вы уже зарегистрированы. Начните работу с ботом.'
+        )
+    return ConversationHandler.END
 
 
 def get_name(update: Update, context: CallbackContext) -> int:
@@ -69,40 +88,33 @@ def get_card_number(update: Update, context: CallbackContext) -> int:
         return CARD_NUMBER
     context.user_data['card_number'] = card_number
 
+    # Получаем никнейм пользователя
     username = update.message.from_user.username
-    context.user_data['username'] = username
+    print(username)
+    # передача даты на бэкенд
+    utils.register_user(
+        firstName=context.user_data['name'].split()[1],
+        lastName=context.user_data['name'].split()[0],
+        middleName=context.user_data['name'].split()[-1],
+        phoneNumber=context.user_data['phone_number'],
+        creditCartNumber=context.user_data['card_number'],
+        tgNickname=username,
+        bannedText=''
+    )
     # Переходим в состояние FINISH и показываем пользователю результаты регистрации
     update.message.reply_text(
-        f'@{username}, Вы успешно зарегистрированы в системе.',
-        reply_markup=ReplyKeyboardRemove()
+        f'@{username}, Вы успешно зарегистрированы, можете начать участие в акциях кэшбека.',
+        reply_markup=ReplyKeyboardRemove(),
     )
+    context.user_data["is_registered"] = True
+    main_menu(update.effective_chat.id, context)
     return FINISH
 
 
 def cancel_registration(update: Update, context: CallbackContext) -> int:
-    # Очищаем user_data и завершаем регистрацию
-    context.user_data.clear()
-    update.message.reply_text(
-        'Регистрация отменена. Для начала регистрации снова введите команду /start.'
-    )
-    return ConversationHandler.END
-
-
-#     # Создаем ConversationHandler и задаем его состояния
-#     conv_handler = ConversationHandler(
-#         entry_points=[CommandHandler('start', start_registration)],
-#         states={
-#             NAME: [MessageHandler(Filters.text & ~Filters.command, get_name)],
-#             PHONE_NUMBER: [MessageHandler(Filters.text & ~Filters.command, get_phone_number)],
-#             CARD_NUMBER: [MessageHandler(Filters.text & ~Filters.command, get_card_number)],
-#             FINISH: [MessageHandler(
-#                 Filters.text & ~Filters.command, cancel_registration)]
-#         },
-#         fallbacks=[CommandHandler('cancel', cancel_registration)]
-#     )
-
-#     # Регистрируем ConversationHandler в updater'е
-
-
-# if __name__ == '__main__':
-#     main()
+    if not context.user_data.get("is_registered"):
+        context.user_data.clear()
+        update.message.reply_text(
+            'Регистрация отменена. Для начала регистрации снова введите команду /registration.'
+        )
+    return FINISH

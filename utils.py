@@ -1,5 +1,5 @@
 from typing import List
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import Update
 from telegram.ext import CallbackContext
 import logging
 import requests
@@ -15,6 +15,18 @@ URL = 'http://62.217.183.218:8000/api'
 
 def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: str, creditCartNumber: str, tgNickname: str, bannedText: str):
 
+    print('sucsess')
+
+    print('firstName', firstName,
+          'lastName', lastName,
+          'middleName', middleName,
+          'phoneNumber', phoneNumber,
+          'creditCartNumber', creditCartNumber,
+          'tgNickname', tgNickname,
+          'isBanned', True,
+          'bannedText', bannedText,
+          )
+
     json_data = {
         'firstName': firstName,
         'lastName': lastName,
@@ -22,7 +34,7 @@ def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: s
         'phoneNumber': phoneNumber,
         'creditCartNumber': creditCartNumber,
         'tgNickname': tgNickname,
-        'isBanned': True,
+        'isBanned': False,
         'bannedText': bannedText,
     }
 
@@ -56,17 +68,6 @@ def cashbacks_users_history(id: int, limit: int, page: int):
         URL + '/cashbacks/users/{0}/history'.format(id), params=params, headers=HEADERS)
 
     return response
-
-
-# print(register_user('test', 0, 'test', 'test1', 'test2', 'test@gmail.com', 'test', '3456789', 'test').text) #вызывает ошибку
-
-
-# files = {'media': open(r'./files/file_0.jpg', 'rb')} #вызывает ошибку
-
-# print(requests.post(URL, files=files)) #вызывает ошибку
-
-
-# заглушка для отправки запроса к API
 
 
 def request_data(update: Update, context: CallbackContext, data_type):

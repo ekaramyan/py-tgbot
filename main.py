@@ -1,6 +1,7 @@
 import logging
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-from handlers import start, receive_cashback, button_callback, register_handler
+from handlers import start, button_callback, register_handler
+from menu import receive_cashback
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
