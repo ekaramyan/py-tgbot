@@ -1,16 +1,23 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, CallbackQueryHandler
-from utils import build_menu
+from utils import build_menu, get_tg_nickname
 from cashback_buttons import available_cashbacks_handler
 
 
 def check_registration(update: Update, context: CallbackContext) -> bool:
     chat_id = update.message.chat_id
-    if not context.user_data.get("is_registered", False):
+    user = update.effective_user
+    tg_nickname = user.username
+    response = get_tg_nickname(tg_nickname)
+    if response.ok:
+        context.user_data['is_registered'] = True
+        return True
+    else:
         context.bot.send_message(
             chat_id=chat_id, text="Для использования функций бота необходимо зарегистрироваться. /registration")
         return False
-    return True
+
+
 
 
 SOME_STRINGS = ["Отправить фото подтверждения покупки",

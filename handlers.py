@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKe
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
 from menu import main_menu, cashback_menu
 from registrtation import NAME, PHONE_NUMBER, CARD_NUMBER, FINISH, start_registration, get_name, get_phone_number, get_card_number, cancel_registration, finish_registration
-from utils import get_cashbacks
+from utils import get_cashbacks, get_tg_nickname
 import os
 
 
@@ -16,6 +16,18 @@ FILES_DIR = os.path.join(os.getcwd(), 'files')
 
 
 def start(update: Update, context: CallbackContext) -> None:
+    user = update.effective_user
+    tg_nickname = user.username
+    response = get_tg_nickname(tg_nickname)
+    if response.ok:
+        context.bot.send_message(
+            chat_id=user.id, text=f"С возвращением, {user.first_name}!")
+        main_menu(update.effective_chat.id, context)
+        context.user_data["previous_menu"] = "start_menu"
+        if update.callback_query.data == "Кэшбеки":
+            cashback_menu(update, context)
+            context.user_data["previous_menu"] = "cashback_menu"
+        return
     if update.callback_query:
         main_menu(update.effective_chat.id, context)
         context.user_data["previous_menu"] = "start_menu"
@@ -25,7 +37,6 @@ def start(update: Update, context: CallbackContext) -> None:
     else:
         main_menu(update.effective_chat.id, context,
                   text="Добро пожаловать! Для получения кэшбека для начала зарегистрируйтесь, а после откройте меню и отправьте подтверждение своей покупки.")
-        user = update.effective_user
         if user.id not in users:
             users[user.id] = {"name": user.first_name, "phone": None}
             context.bot.send_message(
@@ -53,10 +64,7 @@ def receive_photo(update: Update, context: CallbackContext) -> None:
                              text="Спасибо за фото! Отправьте видео подтверждения получения, чтобы мы могли начать обработку.")
     context.dispatcher.add_handler(
         MessageHandler(Filters.video, receive_video))
-    """
-    оно где-то сохраняется или отправляется?
 
-    """
     context.job_queue.run_once(cancel_request_data, 60, context=[
                                update.message.chat_id, update.message.message_id])
 

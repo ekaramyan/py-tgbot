@@ -3,6 +3,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 import logging
 import requests
+import pathlib
 
 
 HEADERS = {
@@ -54,6 +55,34 @@ def cashbacks_users_history(id: int, limit: int, page: int):
 
     response = requests.get(
         URL + '/cashbacks/users/{0}/history'.format(id), params=params, headers=HEADERS)
+
+    return response
+
+
+def request_files(id: int, condition: int, path_file: str):
+
+    headers = {
+        'accept': 'application/json',
+        # 'Content-Type': 'multipart/form-data'
+    }
+    params = {
+        'condition': condition,
+    }
+    
+    files = {
+        'file': open(path_file, 'rb'),
+    }
+    response = requests.patch(URL + '/cashbacks/actions/{0}/upload'.format(id), params=params, headers=headers, files=files)
+
+    return response
+
+
+def get_tg_nickname(tg_nickname: str):
+
+    headers = {
+        'accept': 'application/json',
+    }
+    response = requests.get(URL + '/cashbacks/users/{0}'.format(tg_nickname), headers=headers)
 
     return response
 

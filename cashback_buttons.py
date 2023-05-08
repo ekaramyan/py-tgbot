@@ -32,7 +32,7 @@ def available_cashbacks_handler(update: Update, context: CallbackContext):
     limit = 10  # количество элементов на странице
     current_page = 0
     response = get_cashbacks(status_id=1, limit=limit, page=current_page)
-    cashbacks = [cashback["name"] for cashback in response.json()["data"]]
+    cashbacks = [cashback["name"] for cashback in response.json()["data"]["data"]]      #get_cashbacks(status_id: , limit: , page: ).json()['data']
     send_cashbacks(update, context, cashbacks, current_page)
 
 
