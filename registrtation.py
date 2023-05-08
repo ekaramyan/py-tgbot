@@ -19,6 +19,11 @@ NAME, PHONE_NUMBER, CARD_NUMBER, TG_NICK, FINISH = range(5)
 
 CARD_NUMBER_REGEX = re.compile(r'^\d{16}$')
 
+def is_valid_name(name: str) -> bool:
+    # Проверяем, состоит ли имя из трех слов, разделенных пробелами
+    pattern = r'^[а-яА-ЯёЁa-zA-Z]+\s[а-яА-ЯёЁa-zA-Z]+\s[а-яА-ЯёЁa-zA-Z]+$'
+    return bool(re.match(pattern, name))
+
 
 def validate_card_number(card_number: str) -> bool:
     return bool(CARD_NUMBER_REGEX.match(card_number))
@@ -50,9 +55,13 @@ def finish_registration(update: Update, context: CallbackContext) -> int:
 
 
 def get_name(update: Update, context: CallbackContext) -> int:
-    # Сохраняем введенное ФИО в user_data
+   
+    name = update.message.text.strip()
+    if not is_valid_name(name):
+        update.message.reply_text('Некорректное ФИО. Введите ФИО, состоящее из имени, фамилии и отчества, разделенных пробелами.')
+        return NAME
     context.user_data['name'] = update.message.text
-    # Переходим в состояние PHONE_NUMBER и запрашиваем номер телефона
+
     update.message.reply_text(
         'Введите свой номер телефона в международном формате (например, +12345678910):'
     )

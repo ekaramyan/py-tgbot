@@ -1,6 +1,7 @@
 import logging
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 from handlers import start, button_callback, register_handler
+from cashback_buttons import available_cashbacks_handler
 from menu import receive_cashback
 
 logging.basicConfig(
@@ -14,6 +15,10 @@ updater.dispatcher.add_handler(CommandHandler('start', start))
 
 conv_handler = register_handler()
 updater.dispatcher.add_handler(conv_handler)
+
+updater.dispatcher.add_handler(CallbackQueryHandler(
+    available_cashbacks_handler, pattern="available_cashbacks"))
+
 
 updater.dispatcher.add_handler(MessageHandler(Filters.text, receive_cashback))
 

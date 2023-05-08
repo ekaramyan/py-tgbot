@@ -1,13 +1,17 @@
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import CallbackContext, MessageHandler, Filters
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import CallbackContext, MessageHandler, Filters, CallbackQueryHandler
 from utils import build_menu
+from cashback_buttons import available_cashbacks_handler
+
 
 def check_registration(update: Update, context: CallbackContext) -> bool:
     chat_id = update.message.chat_id
     if not context.user_data.get("is_registered", False):
-        context.bot.send_message(chat_id=chat_id, text="Для использования функций бота необходимо зарегистрироваться. /registration")
+        context.bot.send_message(
+            chat_id=chat_id, text="Для использования функций бота необходимо зарегистрироваться. /registration")
         return False
     return True
+
 
 SOME_STRINGS = ["Отправить фото подтверждения покупки",
                 "Отправить видео подтверждения получения",
@@ -32,10 +36,11 @@ def main_menu(chat_id: int, context: CallbackContext, text: str = "Выбери�
 
 def cashback_menu(update: Update, context: CallbackContext, reply_markup=None) -> None:
     if not check_registration(update, context):
-        return  
+        return
     reply_markup = reply_markup or ReplyKeyboardMarkup(build_menu(
         CASHBACK_KEYBOARD, n_cols=2), resize_keyboard=True)
     chat_id = update.effective_chat.id
+
     context.bot.send_message(
         chat_id=chat_id, text='Выберите нужный пункт меню',
         reply_markup=reply_markup)
@@ -43,6 +48,14 @@ def cashback_menu(update: Update, context: CallbackContext, reply_markup=None) -
     context.user_data["reply_markup"] = reply_markup
     # Сохраняем предыдущее меню в user_data
     context.user_data["previous_menu"] = "main_menu"
+
+    if reply_markup:
+        buttons = reply_markup.keyboard
+        for row in buttons:
+            for button in row:
+                print('for in menu works')
+                if button.text == 'Доступные кэшбеки':
+                    button.callback_data = 'available_cashbacks'
 
 
 def back_to_menu(update: Update, context: CallbackContext, reply_markup=None) -> None:

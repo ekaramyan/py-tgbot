@@ -15,18 +15,6 @@ URL = 'http://62.217.183.218:8000/api'
 
 def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: str, creditCartNumber: str, tgNickname: str, bannedText: str):
 
-    print('sucsess')
-
-    print('firstName', firstName,
-          'lastName', lastName,
-          'middleName', middleName,
-          'phoneNumber', phoneNumber,
-          'creditCartNumber', creditCartNumber,
-          'tgNickname', tgNickname,
-          'isBanned', True,
-          'bannedText', bannedText,
-          )
-
     json_data = {
         'firstName': firstName,
         'lastName': lastName,
@@ -45,7 +33,7 @@ def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: s
 
 
 def get_cashbacks(status_id: int, limit: int, page: int):
-
+    print('sucsess')
     params = {
         'status_id': status_id,
         'limit': limit,
@@ -73,6 +61,7 @@ def cashbacks_users_history(id: int, limit: int, page: int):
 def request_data(update: Update, context: CallbackContext, data_type):
     logging.info(f"request_data called with data_type={data_type}")
     pass
+
 
 # заглушка для отмены запроса к API
 

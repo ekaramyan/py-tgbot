@@ -1,9 +1,9 @@
 import logging
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
 from menu import main_menu, cashback_menu
 from registrtation import NAME, PHONE_NUMBER, CARD_NUMBER, FINISH, start_registration, get_name, get_phone_number, get_card_number, cancel_registration, finish_registration
-
+from utils import get_cashbacks
 import os
 
 
@@ -31,7 +31,8 @@ def start(update: Update, context: CallbackContext) -> None:
             context.bot.send_message(
                 chat_id=user.id, text="Перед началом работы необходимо зарегестрироваться командой /registration")
         else:
-            context.bot.send_message(chat_id=user.id, text="С возвращением!")
+            context.bot.send_message(
+                chat_id=user.id, text="С возвращением!")
 
 
 def register_handler() -> ConversationHandler:
