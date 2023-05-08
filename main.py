@@ -16,8 +16,8 @@ updater.dispatcher.add_handler(CommandHandler('start', start))
 conv_handler = register_handler()
 updater.dispatcher.add_handler(conv_handler)
 
-updater.dispatcher.add_handler(CallbackQueryHandler(
-    available_cashbacks_handler, pattern="available_cashbacks"))
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(
+    '^(Доступные кэшбеки)$'), available_cashbacks_handler))
 
 
 updater.dispatcher.add_handler(MessageHandler(Filters.text, receive_cashback))
