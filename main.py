@@ -1,5 +1,6 @@
 import logging
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
+from telegram import Update
 from handlers import start, button_callback, register_handler
 from cashback_buttons import available_cashbacks_handler
 from menu import receive_cashback
@@ -8,6 +9,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 TOKEN = '6134723312:AAFy2KiaQZQQdtDQL66OrZRs8QmBSAm1wxk'
+update = Update
+context = CallbackContext
 
 updater = Updater(token=TOKEN, use_context=True)
 

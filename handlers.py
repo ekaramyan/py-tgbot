@@ -1,7 +1,7 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
-from menu import main_menu, cashback_menu
+from menu import main_menu, cashback_menu, check_registration
 from registrtation import NAME, PHONE_NUMBER, CARD_NUMBER, FINISH, start_registration, get_name, get_phone_number, get_card_number, cancel_registration, finish_registration
 from utils import get_cashbacks, get_tg_nickname
 import os
@@ -18,6 +18,7 @@ FILES_DIR = os.path.join(os.getcwd(), 'files')
 def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     tg_nickname = user.username
+    print(user)
     response = get_tg_nickname(tg_nickname)
     if response.ok:
         context.bot.send_message(
@@ -47,6 +48,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 
 def register_handler() -> ConversationHandler:
+
     return ConversationHandler(
         entry_points=[CommandHandler('registration', start_registration)],
         states={
@@ -54,7 +56,7 @@ def register_handler() -> ConversationHandler:
             PHONE_NUMBER: [MessageHandler(Filters.text & ~Filters.command, get_phone_number)],
             CARD_NUMBER: [MessageHandler(Filters.text & ~Filters.command, get_card_number)],
             FINISH: [MessageHandler(
-                Filters.text & ~Filters.command, finish_registration)]
+                    Filters.text & ~Filters.command, finish_registration)]
         },
         fallbacks=[CommandHandler('cancel', cancel_registration)])
 

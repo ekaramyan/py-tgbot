@@ -30,12 +30,20 @@ def validate_card_number(card_number: str) -> bool:
 
 
 def start_registration(update: Update, context: CallbackContext) -> int:
-    # Переходим в состояние NAME и запрашиваем ФИО
-    context.user_data["is_registered"] = False
-    update.message.reply_text(
-        'Для регистрации введите свои ФИО:',
-        reply_markup=ReplyKeyboardRemove()
-    )
+    user = update.effective_user
+    tg_nickname = user.username if user else None
+    print(user)
+    response = utils.get_tg_nickname(tg_nickname)
+    if response.ok:
+        context.user_data["is_registered"] = True
+        return context.bot.send_message(
+            chat_id=user["id"], text=f"{user['first_name']}, вы уже зарегестрированы")
+    else:
+        context.user_data["is_registered"] = False
+        update.message.reply_text(
+            'Для регистрации введите свои ФИО:',
+            reply_markup=ReplyKeyboardRemove()
+        )
     return NAME
 
 
