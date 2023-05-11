@@ -42,7 +42,6 @@ def get_cashbacks(status_id: int, limit: int, page: int):
     }
 
     response = requests.get(URL + '/cashbacks', params=params, headers=HEADERS)
-
     return response
 
 
