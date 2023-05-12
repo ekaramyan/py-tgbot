@@ -11,13 +11,14 @@ def cashback_details_handler(update: Update, context: CallbackContext):
     query = update.callback_query
     # print(f"query.data: {query.data}")
 
-    limit = 25  # количество элементов на странице
+    limit = 25
     current_page = 0
     response = get_cashbacks(status_id=0, limit=limit, page=current_page)
     cashbacks_data = response.json()["data"]
 
     cashback = {"name":"Нет Данных", "linkOnSite":"Нет Данных"}
 
+    item_id=None
 
     if query.data.startswith("cashback_details_"):
         item_id = query.data.replace("cashback_details_", "")
@@ -43,7 +44,7 @@ def cashback_details_handler(update: Update, context: CallbackContext):
 
                 buttons = [
                         InlineKeyboardButton("Участвовать", callback_data=f"cashback_details_{item_id}_participate"),
-                        InlineKeyboardButton("Не участвовать", callback_data=f"cashback_details_{item_id}_not_participate")
+                        InlineKeyboardButton("Назад", callback_data=f"cashback_details_{item_id}_not_participate")
                     ]
                 keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
 
@@ -62,6 +63,12 @@ def cashback_details_handler(update: Update, context: CallbackContext):
         delete_message(update, context)
     elif query.data.endswith("_participate"):
         print("yes")
+
+        cashbackActionId = item_id
+        cashbackItemId = item_id
+        cashbackUserId = 38
+        cashbackContractStatusId = 0
+        response = add_to_my_cashbacks(cashbackActionId, cashbackItemId, cashbackUserId, cashbackContractStatusId)
         #
 
     
