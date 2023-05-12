@@ -1,7 +1,6 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, CallbackQueryHandler
 from utils import build_menu, get_tg_nickname
-from cashback_buttons import available_cashbacks_handler
 
 
 def check_registration(update: Update, context: CallbackContext) -> bool:
@@ -16,8 +15,6 @@ def check_registration(update: Update, context: CallbackContext) -> bool:
         context.bot.send_message(
             chat_id=chat_id, text="Для использования функций бота необходимо зарегистрироваться. /registration")
         return False
-
-
 
 
 SOME_STRINGS = ["Отправить фото подтверждения покупки",
@@ -98,6 +95,7 @@ def receive_cashback(update: Update, context: CallbackContext) -> None:
 
         context.job_queue.run_once(cancel_request_data, 60, context=[
             update.message.chat_id, update.message.message_id])
+        
     elif update.message.text == "Кэшбеки":
 
         reply_markup = ReplyKeyboardMarkup(build_menu(

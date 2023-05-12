@@ -34,7 +34,6 @@ def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: s
 
 
 def get_cashbacks(status_id: int, limit: int, page: int):
-    print('sucsess')
     params = {
         'status_id': status_id,
         'limit': limit,
@@ -84,6 +83,20 @@ def get_tg_nickname(tg_nickname: str):
     response = requests.get(URL + '/cashbacks/users/{0}'.format(tg_nickname), headers=headers)
 
     return response
+
+
+
+# добавь эндпоинт для отправки кэшбека в список кэшбеков пользователя
+
+def add_to_my_cashbacks(cashback_id: int):
+    payload = {
+        'id': cashback_id,
+    }
+
+    response = requests.post(URL + '/cashbacks/contracts', json=payload, headers=HEADERS)
+    return response.json()
+
+# написал все же сам, но я в нем не уверен
 
 
 def request_data(update: Update, context: CallbackContext, data_type):

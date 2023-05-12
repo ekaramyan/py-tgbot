@@ -2,7 +2,8 @@ import logging
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
 from telegram import Update
 from handlers import start, button_callback, register_handler
-from cashback_buttons import available_cashbacks_handler, pagination_handler
+from cashback_buttons import cashbacks_available_handler, pagination_handler, get_user_cashbacks, cashbacks_archive_handler
+from add_cashback import cashback_details_handler
 from menu import receive_cashback
 
 logging.basicConfig(
@@ -18,7 +19,15 @@ conv_handler = register_handler()
 updater.dispatcher.add_handler(conv_handler)
 
 updater.dispatcher.add_handler(MessageHandler(Filters.regex(
-    '^(Доступные кэшбеки)$'), available_cashbacks_handler))
+    '^(Доступные кэшбеки)$'), cashbacks_available_handler))
+
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(
+    '^(Архивные кэшбеки)$'), cashbacks_archive_handler))
+
+updater.dispatcher.add_handler(MessageHandler(Filters.regex(
+    '^(Ваши кэшбеки)$'), get_user_cashbacks))
+
+updater.dispatcher.add_handler(CallbackQueryHandler(cashback_details_handler, pattern=r"^cashback_details_.*"))
 
 updater.dispatcher.add_handler(CallbackQueryHandler(pagination_handler, pattern=r"^(cashback|other)_.*"))
 

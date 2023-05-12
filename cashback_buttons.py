@@ -1,12 +1,11 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 from utils import get_cashbacks, build_menu, cashbacks_users_history
-import math
 
-def available_cashbacks_handler(update: Update, context: CallbackContext):
-    limit = 15  # количество элементов на странице
+def available_cashbacks_handler(update: Update, context: CallbackContext, status_id: int, show_text: bool):
+    limit = 25  # количество элементов на странице
     current_page = 0
-    response = get_cashbacks(status_id=0, limit=limit, page=current_page)
+    response = get_cashbacks(status_id=status_id, limit=limit, page=current_page)
     cashbacks_data = response.json()["data"]
 
     items = cashbacks_data["data"]
@@ -17,20 +16,28 @@ def available_cashbacks_handler(update: Update, context: CallbackContext):
     context.user_data["cashback_items"] = items
     context.user_data["cashback_total_pages"] = total_pages
 
-    send_pagination(update, context, items, current_page, total_pages, prefix, limit)
+    send_pagination(update, context, items, current_page, total_pages, prefix, limit, new_message=True, show_text=show_text)
 
 
-def get_user_cashbacks(id: int, limit: int, page: int):
-    response = cashbacks_users_history(id, limit, page)
+def get_user_cashbacks(update: Update, context: CallbackContext):
+    limit = 25  # количество элементов на странице
+    current_page = 0
+    user_id = update.message.from_user.id  # ID пользователя
+    response = cashbacks_users_history(user_id, limit=limit, page=current_page)
     cashbacks_data = response.json()["data"]
     items = cashbacks_data["data"]
     total_pages = cashbacks_data["total_pages"]
-    return items, total_pages
+    prefix = "cashback_history"
+    # Сохранение items в user_data
+    context.user_data["cashback_history_items"] = items
+    context.user_data["cashback_history_total_pages"] = total_pages
 
+    send_pagination(update, context, items, current_page, total_pages, prefix, limit, new_message=True, show_text=False)
 
-def send_pagination(update, context, items, current_page, total_pages, prefix, limit):
+def send_pagination(update, context, items, current_page, total_pages, prefix, limit, new_message=False, show_text=False):
     if len(items) == 0:
-        update.message.reply_text("Нет доступных элементов")
+        message = update.message.reply_text("Тут ничего нет:(")
+        context.user_data["message_id"] = message.message_id
         return
 
     start_index = current_page * limit
@@ -40,9 +47,9 @@ def send_pagination(update, context, items, current_page, total_pages, prefix, l
     buttons = []
 
     for i, item in enumerate(items_slice):
-        item_id = start_index + i
+        item_id = item["id"]
         item_name = item["name"]
-        buttons.append(InlineKeyboardButton(str(item_name), callback_data=f"{prefix}_{item_id}"))
+        buttons.append(InlineKeyboardButton(str(item_name), callback_data=f"cashback_details_{item_id}"))
 
     if current_page > 0:
         buttons.append(InlineKeyboardButton("<< Назад", callback_data=f"{prefix}_prev"))
@@ -50,20 +57,38 @@ def send_pagination(update, context, items, current_page, total_pages, prefix, l
         buttons.append(InlineKeyboardButton("Вперед >>", callback_data=f"{prefix}_next"))
 
     keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=1))
- 
-    if "message_id" in context.user_data:
-        # Обновление существующего сообщения
-        message_id = context.user_data["message_id"]
-        context.bot.edit_message_text(
-            chat_id=update.effective_chat.id,
-            message_id=message_id,
-            text="Доступные элементы:",
-            reply_markup=keyboard
-        )
+
+    if new_message or "message_id" not in context.user_data:
+        if show_text:
+            # Отправка нового сообщения с текстом
+            text = "\n".join([item["name"] for item in items_slice])
+            message = update.message.reply_text('Архивные кэшбеки:\n' + text)
+            context.user_data["message_id"] = message.message_id
+        else:
+            # Отправка нового сообщения с кнопками
+            message = update.message.reply_text("Доступные кэшбеки:", reply_markup=keyboard)
+            context.user_data["message_id"] = message.message_id
     else:
-        # Отправка нового сообщения
-        message = update.message.reply_text("Доступные элементы:", reply_markup=keyboard)
-        context.user_data["message_id"] = message.message_id
+        if show_text:
+            # Редактирование существующего сообщения с текстом
+            message_id = context.user_data["message_id"]
+            text = "\n".join([item["name"] for item in items_slice])
+            context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=message_id,
+                text=text,
+                reply_markup=keyboard
+            )
+        else:
+            # Редактирование существующего сообщения с кнопками
+            message_id = context.user_data["message_id"]
+            context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=message_id,
+                text="Доступные кэшбеки:",
+                reply_markup=keyboard
+            )
+
 
 def get_pagination(update, context, items, prefix, page, limit):
     total_pages = context.user_data.get("cashback_total_pages", 0)
@@ -82,26 +107,33 @@ def get_pagination(update, context, items, prefix, page, limit):
 
 
 def pagination_handler(update: Update, context: CallbackContext):
-    print('sheesh')
-
+    items = context.user_data.get("cashback_items", [])
+    if len(items) == 0:
+        if update.message:
+            message = update.message.reply_text("Тут ничего нет:(")
+            context.user_data["message_id"] = message.message_id
+        return   
     query = update.callback_query
     prefix, action = query.data.split("_")
-
-    # Получение текущей страницы из user_data
     current_page = int(context.user_data.get(f"{prefix}_page", 0))
 
     if action == "prev":
-        current_page -= 1  
+        current_page -= 1
     elif action == "next":
         current_page += 1
 
-    # Получение items из user_data
-    items = context.user_data.get("cashback_items", [])  
-
-    # Получение limit из user_data
-    limit = 5
-
-    # Сохранение нового значения текущей страницы в user_data
+    limit = 25
+    total_pages = context.user_data.get("cashback_total_pages", 0)
     context.user_data[f"{prefix}_page"] = current_page
-    print(current_page)
-    get_pagination(update, context, items, prefix, current_page, limit)
+
+    send_pagination(update, context, items, current_page, total_pages, prefix, limit)
+
+
+
+def cashbacks_archive_handler(update: Update, context: CallbackContext):
+    context.user_data["cashback_status_id"] = 1
+    available_cashbacks_handler(update, context, status_id=1, show_text=True)
+
+def cashbacks_available_handler(update: Update, context: CallbackContext):
+    context.user_data["cashback_status_id"] = 0
+    available_cashbacks_handler(update, context, status_id=0, show_text=False)

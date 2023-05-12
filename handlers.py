@@ -1,10 +1,12 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
-from menu import main_menu, cashback_menu, check_registration
+from menu import main_menu, cashback_menu
 from registrtation import NAME, PHONE_NUMBER, CARD_NUMBER, FINISH, start_registration, get_name, get_phone_number, get_card_number, cancel_registration, finish_registration
-from utils import get_cashbacks, get_tg_nickname
+from utils import request_files, get_tg_nickname
 import os
+import math
+import random
 
 
 # Словарь, в котором будут храниться пользователи и их данные
@@ -18,7 +20,6 @@ FILES_DIR = os.path.join(os.getcwd(), 'files')
 def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     tg_nickname = user.username
-    print(user)
     response = get_tg_nickname(tg_nickname)
     if response.ok:
         context.bot.send_message(
@@ -61,6 +62,23 @@ def register_handler() -> ConversationHandler:
         fallbacks=[CommandHandler('cancel', cancel_registration)])
 
 
+def receive_video(update: Update, context: CallbackContext) -> None:
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="Спасибо за видео! Ожидайте проверки аналитиком данных, вы также можете отследить статус получения кэшбека в соответствующем пункте меню.")
+    context.job_queue.run_once(cancel_request_data, 60, context=[
+                               update.message.chat_id, update.message.message_id])
+
+    # Отправка видео на сервер
+    id = 123  # Замените на соответствующий идентификатор
+    condition = 2  # Замените на соответствующее условие
+    path_to_video = "path/to/video.mp4"  # Замените на путь к файлу видео
+    response = request_files(id, condition, path_to_video)
+    if response.status_code == 200:
+        print("Видео успешно отправлено на сервер")
+    else:
+        print("Произошла ошибка при отправке видео на сервер")
+
+
 def receive_photo(update: Update, context: CallbackContext) -> None:
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text="Спасибо за фото! Отправьте видео подтверждения получения, чтобы мы могли начать обработку.")
@@ -71,11 +89,19 @@ def receive_photo(update: Update, context: CallbackContext) -> None:
                                update.message.chat_id, update.message.message_id])
 
 
-def receive_video(update: Update, context: CallbackContext) -> None:
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text="Спасибо за видео! Ожидайте проверки аналитиком данных, вы так же можете отследить статус получения кэшбека в соответствующем пункте меню.")
-    context.job_queue.run_once(cancel_request_data, 60, context=[
-                               update.message.chat_id, update.message.message_id])
+    user_id = update.effective_user.id
+    photo_file = update.message.photo[-1].get_file()
+    path_to_photo = f"files/photo_{user_id+random}.jpg"
+    photo_file.download(path_to_photo)
+    id = int(math.ceil(user_id*random))
+    print(id)
+    condition = 1
+    response = request_files(id, condition, path_to_photo)
+    if response.status_code == 200:
+        print("Фото успешно отправлено на сервер")
+    else:
+        print("Произошла ошибка при отправке фото на сервер")
+
 
 
 def cancel_request_data(context: CallbackContext) -> None:

@@ -32,7 +32,6 @@ def validate_card_number(card_number: str) -> bool:
 def start_registration(update: Update, context: CallbackContext) -> int:
     user = update.effective_user
     tg_nickname = user.username if user else None
-    print(user)
     response = utils.get_tg_nickname(tg_nickname)
     if response.ok:
         context.user_data["is_registered"] = True
@@ -105,10 +104,7 @@ def get_card_number(update: Update, context: CallbackContext) -> int:
         return CARD_NUMBER
     context.user_data['card_number'] = card_number
 
-    # Получаем никнейм пользователя
     username = update.message.from_user.username
-    print(username)
-    # передача даты на бэкенд
     utils.register_user(
         firstName=context.user_data['name'].split()[1],
         lastName=context.user_data['name'].split()[0],
