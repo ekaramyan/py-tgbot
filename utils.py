@@ -1,15 +1,23 @@
 from typing import List
+<<<<<<< HEAD
 from telegram import Update
+=======
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+>>>>>>> main
 from telegram.ext import CallbackContext
 import logging
 import requests
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 HEADERS = {
     'accept': 'application/json',
     'Content-Type': 'application/json',
 }
 
+<<<<<<< HEAD
 URL = 'http://62.217.183.218:8000/api'
 
 
@@ -33,6 +41,31 @@ def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: s
 
 
 def get_cashbacks(status_id: int, limit: int, page: int):
+=======
+URL = "http://62.217.183.218:8000/api"
+
+def register_user(password: str, roleId: str, photo: str, firstName: str, lastName: str, email: str, login: str, phone: str, tg: str):
+
+    HEADERS['token'] = ''
+    json_data = {
+        'password': password,
+        'roleId': 0,
+        'photo': photo,
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'login': login,
+        'phone': phone,
+        'tg': tg,
+    }
+
+    response = requests.post(URL + '/users', headers=HEADERS, json=json_data)
+
+    return response
+
+def get_cashbacks(status_id: int, limit: int, page: int):
+
+>>>>>>> main
     params = {
         'status_id': status_id,
         'limit': limit,
@@ -40,6 +73,7 @@ def get_cashbacks(status_id: int, limit: int, page: int):
     }
 
     response = requests.get(URL + '/cashbacks', params=params, headers=HEADERS)
+<<<<<<< HEAD
     return response
 
 
@@ -87,11 +121,19 @@ def get_tg_nickname(tg_nickname: str):
 
 def my_cashbacks(user_id: int, limit: int, page: int):
 
+=======
+
+    return response
+
+def cashbacks_users_history(id: int, limit: int, page: int):
+    
+>>>>>>> main
     params = {
         'limit': limit,
         'page': page,
     }
 
+<<<<<<< HEAD
     response = requests.get(URL + '/cashbacks/{0}/contracts'.format(user_id), params=params, headers=HEADERS)
     return response.json()
 
@@ -142,13 +184,33 @@ def add_to_my_cashbacks(cashbackActionId: int, cashbackItemId: int, cashbackUser
     response = requests.post(URL + '/cashbacks/contracts', json=params, headers=HEADERS)
     return response.json()
 
+=======
+    response = requests.get(URL + '/cashbacks/users/{0}/history'.format(id), params=params, headers=HEADERS)
+
+    return response
+
+
+print(register_user('test', 0, 'test', 'test1', 'test2', 'test@gmail.com', 'test', '3456789', 'test').text)
+
+
+url = ''
+files = {'media': open(r'C:\Programming\work\py-tgbot\test.jpg.jpg', 'rb')}
+
+print(requests.post(url, files=files))
+
+
+# заглушка для отправки запроса к API
+>>>>>>> main
 
 
 def request_data(update: Update, context: CallbackContext, data_type):
     logging.info(f"request_data called with data_type={data_type}")
     pass
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 # заглушка для отмены запроса к API
 
 
