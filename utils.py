@@ -85,14 +85,14 @@ def get_tg_nickname(tg_nickname: str):
 
 
 
-# добавь эндпоинт для отправки кэшбека в список кэшбеков пользователя
+def my_cashbacks(user_id: int, limit: int, page: int):
 
-def my_cashbacks(cashback_id: int):
     params = {
-        'id': cashback_id,
+        'limit': limit,
+        'page': page,
     }
 
-    response = requests.get(URL + '/cashbacks/contracts', json=params, headers=HEADERS)
+    response = requests.get(URL + '/cashbacks/{0}/contracts'.format(user_id), params=params, headers=HEADERS)
     return response.json()
 
 
@@ -107,36 +107,36 @@ def add_to_my_cashbacks(cashbackActionId: int, cashbackItemId: int, cashbackUser
         'cashbackUserId': cashbackUserId,
         'cashbackContractStatusId': cashbackContractStatusId,
 
-        # 'userPaid': True,
-        # 'userStartedAt': '2023-05-12T07:07:09.044Z',
-        # 'hasComplited': True,
-        # 'hasPaid': True,
-        # 'paidDocumentUrl': 'string',
-        # 'isCondition1': True,
-        # 'condition1Url': 'string',
-        # 'condition1Hours': 0,
-        # 'condition1FinishedAt': '2023-05-12T07:07:09.044Z',
-        # 'isCondition1CheckedByAdmin': True,
-        # 'isCondition2': True,
-        # 'condition2Url': 'string',
-        # 'condition2Hours': 0,
-        # 'condition2FinishedAt': '2023-05-12T07:07:09.044Z',
-        # 'isCondition2CheckedByAdmin': True,
-        # 'isCondition3': True,
-        # 'condition3Url': 'string',
-        # 'condition3Hours': 0,
-        # 'condition3FinishedAt': '2023-05-12T07:07:09.044Z',
-        # 'isCondition3CheckedByAdmin': True,
-        # 'isCondition4': True,
-        # 'condition4Url': 'string',
-        # 'condition4Hours': 0,
-        # 'condition4FinishedAt': '2023-05-12T07:07:09.044Z',
-        # 'isCondition4CheckedByAdmin': True,
-        # 'isCondition5': True,
-        # 'condition5Url': 'string',
-        # 'condition5Hours': 0,
-        # 'condition5FinishedAt': '2023-05-12T07:07:09.044Z',
-        # 'isCondition5CheckedByAdmin': True,
+        'userPaid': True,
+        'userStartedAt': '2023-05-12T07:07:09.044Z',
+        'hasComplited': True,
+        'hasPaid': True,
+        'paidDocumentUrl': 'string',
+        'isCondition1': True,
+        'condition1Url': 'string',
+        'condition1Hours': 0,
+        'condition1FinishedAt': '2023-05-12T07:07:09.044Z',
+        'isCondition1CheckedByAdmin': True,
+        'isCondition2': True,
+        'condition2Url': 'string',
+        'condition2Hours': 0,
+        'condition2FinishedAt': '2023-05-12T07:07:09.044Z',
+        'isCondition2CheckedByAdmin': True,
+        'isCondition3': True,
+        'condition3Url': 'string',
+        'condition3Hours': 0,
+        'condition3FinishedAt': '2023-05-12T07:07:09.044Z',
+        'isCondition3CheckedByAdmin': True,
+        'isCondition4': True,
+        'condition4Url': 'string',
+        'condition4Hours': 0,
+        'condition4FinishedAt': '2023-05-12T07:07:09.044Z',
+        'isCondition4CheckedByAdmin': True,
+        'isCondition5': True,
+        'condition5Url': 'string',
+        'condition5Hours': 0,
+        'condition5FinishedAt': '2023-05-12T07:07:09.044Z',
+        'isCondition5CheckedByAdmin': True,
     }
 
     response = requests.post(URL + '/cashbacks/contracts', json=params, headers=HEADERS)

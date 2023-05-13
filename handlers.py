@@ -1,7 +1,7 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
-from menu import main_menu, cashback_menu
+from menu import main_menu, cashback_menu, check_registration
 from registrtation import NAME, PHONE_NUMBER, CARD_NUMBER, FINISH, start_registration, get_name, get_phone_number, get_card_number, cancel_registration, finish_registration
 from utils import request_files, get_tg_nickname
 import os
@@ -19,33 +19,20 @@ FILES_DIR = os.path.join(os.getcwd(), 'files')
 
 def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
-    tg_nickname = user.username
-    response = get_tg_nickname(tg_nickname)
-    if response.ok:
+    is_registered = check_registration(update, context)
+    if is_registered:
         context.bot.send_message(
             chat_id=user.id, text=f"С возвращением, {user.first_name}!")
         main_menu(update.effective_chat.id, context)
         context.user_data["previous_menu"] = "start_menu"
-        if update.callback_query.data == "Кэшбеки":
-            cashback_menu(update, context)
-            context.user_data["previous_menu"] = "cashback_menu"
-        return
-    if update.callback_query:
-        main_menu(update.effective_chat.id, context)
-        context.user_data["previous_menu"] = "start_menu"
-        if update.callback_query.data == "Кэшбеки":
-            cashback_menu(update, context)
-            context.user_data["previous_menu"] = "cashback_menu"
     else:
         main_menu(update.effective_chat.id, context,
                   text="Добро пожаловать! Для получения кэшбека для начала зарегистрируйтесь, а после откройте меню и отправьте подтверждение своей покупки.")
         if user.id not in users:
             users[user.id] = {"name": user.first_name, "phone": None}
-            context.bot.send_message(
-                chat_id=user.id, text="Перед началом работы необходимо зарегестрироваться командой /registration")
-        else:
-            context.bot.send_message(
-                chat_id=user.id, text="С возвращением!")
+            # context.bot.send_message(
+            #     chat_id=user.id, text="Перед началом работы необходимо зарегистрироваться командой, до регистрации все функции бота заблокированы /registration")
+
 
 
 def register_handler() -> ConversationHandler:
@@ -94,14 +81,12 @@ def receive_photo(update: Update, context: CallbackContext) -> None:
     path_to_photo = f"files/photo_{user_id+random}.jpg"
     photo_file.download(path_to_photo)
     id = int(math.ceil(user_id*random))
-    print(id)
     condition = 1
     response = request_files(id, condition, path_to_photo)
     if response.status_code == 200:
         print("Фото успешно отправлено на сервер")
     else:
         print("Произошла ошибка при отправке фото на сервер")
-
 
 
 def cancel_request_data(context: CallbackContext) -> None:

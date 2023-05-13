@@ -7,19 +7,26 @@ def check_registration(update: Update, context: CallbackContext) -> bool:
     chat_id = update.message.chat_id
     user = update.effective_user
     tg_nickname = user.username
-    response = get_tg_nickname(tg_nickname)
-    if response.ok:
+    # tg_nickname = user.username if user else None
+    response = get_tg_nickname(tg_nickname).json()["data"]
+    if response:
+        print("true")
         context.user_data['is_registered'] = True
         return True
     else:
         context.bot.send_message(
-            chat_id=chat_id, text="Для использования функций бота необходимо зарегистрироваться. /registration")
+            chat_id=chat_id, text="Для использования функций бота необходимо зарегистрироваться. Вы не сможете пользоапться ботом, пока вы не зарегестрироавлись. /registration")
+        context.user_data['is_registered'] = False
         return False
 
 
-SOME_STRINGS = ["Отправить фото подтверждения покупки",
-                "Отправить видео подтверждения получения",
+
+SOME_STRINGS = ["Аккаунт",
                 "Кэшбеки"]
+
+ACCOUNT_KEYBOARD = ["Изменить информацию",
+                    "Удалить аккаунт"]
+
 BACK_KEYBOARD = ['Назад']
 CASHBACK_KEYBOARD = ['Ваши кэшбеки',
                      'Доступные кэшбеки',
@@ -29,8 +36,8 @@ CASHBACK_KEYBOARD = ['Ваши кэшбеки',
 
 def main_menu(chat_id: int, context: CallbackContext, text: str = "Выберите нужный пункт меню", reply_markup=None) -> None:
     if not context.user_data.get("is_registered", False):
-        context.bot.send_message(
-            chat_id=chat_id, text="Для использования функций бота необходимо зарегистрироваться. /registration")
+        # context.bot.send_message(
+        #     chat_id=chat_id, text="Добро пожаловать! Вы не зарегестрированы, зарегестрируйтесь")
         return
     reply_markup = ReplyKeyboardMarkup(build_menu(
         SOME_STRINGS, n_cols=1), resize_keyboard=True)
@@ -57,7 +64,6 @@ def cashback_menu(update: Update, context: CallbackContext, reply_markup=None) -
         buttons = reply_markup.keyboard
         for row in buttons:
             for button in row:
-                print('for in menu works')
                 if button.text == 'Доступные кэшбеки':
                     button.callback_data = 'available_cashbacks'
 
@@ -78,23 +84,10 @@ def back_to_menu(update: Update, context: CallbackContext, reply_markup=None) ->
 def receive_cashback(update: Update, context: CallbackContext) -> None:
     if not check_registration(update, context):
         return
-    if update.message.text == "Отправить фото подтверждения покупки":
+    #cскопировать в aprove
+    if  update.message.text == "Аккаунт":
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="Отправьте фото подтверждения покупки")
-        context.dispatcher.add_handler(
-            MessageHandler(Filters.photo, receive_photo))
-
-        context.job_queue.run_once(cancel_request_data, 60, context=[
-            update.message.chat_id, update.message.message_id])
-
-    elif update.message.text == "Отправить видео подтверждения получения":
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="Отправьте видео подтверждения получения товара, желательно, где ввы отрезаете этикетку, чтобы мы были уверене, что не будет возврата товара")
-        context.dispatcher.add_handler(
-            MessageHandler(Filters.photo, receive_photo))
-
-        context.job_queue.run_once(cancel_request_data, 60, context=[
-            update.message.chat_id, update.message.message_id])
+                                text="Еще в разработке")
         
     elif update.message.text == "Кэшбеки":
 

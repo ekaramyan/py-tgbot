@@ -3,14 +3,13 @@ from telegram.ext import (
     Updater,
     CommandHandler,
     MessageHandler,
-    Filters,
     ConversationHandler,
     CallbackContext,
 )
 from phonenumbers import parse, PhoneNumberFormat
 import re
 import utils
-from menu import main_menu
+from menu import main_menu, check_registration
 
 
 # Определяем константы для состояний
@@ -31,9 +30,8 @@ def validate_card_number(card_number: str) -> bool:
 
 def start_registration(update: Update, context: CallbackContext) -> int:
     user = update.effective_user
-    tg_nickname = user.username if user else None
-    response = utils.get_tg_nickname(tg_nickname)
-    if response.ok:
+    is_registered = check_registration(update, context)
+    if is_registered:
         context.user_data["is_registered"] = True
         return context.bot.send_message(
             chat_id=user["id"], text=f"{user['first_name']}, вы уже зарегестрированы")

@@ -1,9 +1,12 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
-from utils import get_cashbacks, build_menu, cashbacks_users_history
+from utils import get_cashbacks, build_menu, cashbacks_users_history, my_cashbacks, get_tg_nickname
+
+
+    # items = my_cashbacks(user_id: user_id, limit: limit, page: current_page).json()["data"]
 
 def available_cashbacks_handler(update: Update, context: CallbackContext, status_id: int, show_text: bool):
-    limit = 25  # количество элементов на странице
+    limit = 25
     current_page = 0
     response = get_cashbacks(status_id=status_id, limit=limit, page=current_page)
     cashbacks_data = response.json()["data"]
@@ -12,7 +15,7 @@ def available_cashbacks_handler(update: Update, context: CallbackContext, status
     total_pages = cashbacks_data["total_pages"]
     prefix = "cashback"
 
-    # Сохранение items в user_data
+
     context.user_data["cashback_items"] = items
     context.user_data["cashback_total_pages"] = total_pages
 
@@ -20,15 +23,19 @@ def available_cashbacks_handler(update: Update, context: CallbackContext, status
 
 
 def get_user_cashbacks(update: Update, context: CallbackContext):
-    limit = 25  # количество элементов на странице
+    limit = 25
     current_page = 0
-    user_id = update.message.from_user.id  # ID пользователя
-    response = cashbacks_users_history(user_id, limit=limit, page=current_page)
+    user_nick = update.effective_user.username
+    user_id = get_tg_nickname(user_nick).json()["data"]["id"]
+    ###############################################################
+    # response = cashbacks_users_history(user_id, limit=limit, page=current_page)
+    response = get_cashbacks(status_id=0, limit=limit, page=current_page) # заглушка
+    ###############################################################
     cashbacks_data = response.json()["data"]
     items = cashbacks_data["data"]
     total_pages = cashbacks_data["total_pages"]
     prefix = "cashback_history"
-    # Сохранение items в user_data
+
     context.user_data["cashback_history_items"] = items
     context.user_data["cashback_history_total_pages"] = total_pages
 
@@ -36,7 +43,7 @@ def get_user_cashbacks(update: Update, context: CallbackContext):
 
 def send_pagination(update, context, items, current_page, total_pages, prefix, limit, new_message=False, show_text=False):
     if len(items) == 0:
-        message = update.message.reply_text("Тут ничего нет:(")
+        message = update.message.reply_text("Это меню пустое")
         context.user_data["message_id"] = message.message_id
         return
 
@@ -49,7 +56,10 @@ def send_pagination(update, context, items, current_page, total_pages, prefix, l
     for i, item in enumerate(items_slice):
         item_id = item["id"]
         item_name = item["name"]
-        buttons.append(InlineKeyboardButton(str(item_name), callback_data=f"cashback_details_{item_id}"))
+        if(prefix == 'cashback'):
+            buttons.append(InlineKeyboardButton(str(item_name), callback_data=f"cashback_details_{item_id}"))
+        elif(prefix == 'cashback_history'):
+            buttons.append(InlineKeyboardButton(str(item_name), callback_data=f"cashback_aproval_{item_id}"))
 
     if current_page > 0:
         buttons.append(InlineKeyboardButton("<< Назад", callback_data=f"{prefix}_prev"))
@@ -60,17 +70,14 @@ def send_pagination(update, context, items, current_page, total_pages, prefix, l
 
     if new_message or "message_id" not in context.user_data:
         if show_text:
-            # Отправка нового сообщения с текстом
             text = "\n".join([item["name"] for item in items_slice])
             message = update.message.reply_text('Архивные кэшбеки:\n' + text)
             context.user_data["message_id"] = message.message_id
         else:
-            # Отправка нового сообщения с кнопками
             message = update.message.reply_text("Доступные кэшбеки:", reply_markup=keyboard)
             context.user_data["message_id"] = message.message_id
     else:
         if show_text:
-            # Редактирование существующего сообщения с текстом
             message_id = context.user_data["message_id"]
             text = "\n".join([item["name"] for item in items_slice])
             context.bot.edit_message_text(
@@ -80,7 +87,6 @@ def send_pagination(update, context, items, current_page, total_pages, prefix, l
                 reply_markup=keyboard
             )
         else:
-            # Редактирование существующего сообщения с кнопками
             message_id = context.user_data["message_id"]
             context.bot.edit_message_text(
                 chat_id=update.effective_chat.id,
