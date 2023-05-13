@@ -2,6 +2,7 @@ from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, CallbackQueryHandler
 from utils import build_menu, get_tg_nickname
 
+# ff
 
 def check_registration(update: Update, context: CallbackContext) -> bool:
     chat_id = update.message.chat_id

@@ -5,7 +5,7 @@ from utils import get_cashbacks, request_files, build_menu, get_tg_nickname
 import math
 import random
 
-
+# ff
 
 def delete_message(update: Update):
     query = update.callback_query
