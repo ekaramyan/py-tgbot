@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKe
 from telegram.ext import CallbackContext, MessageHandler, Filters, ConversationHandler, CommandHandler
 from menu import main_menu, cashback_menu, check_registration
 from registrtation import NAME, PHONE_NUMBER, CARD_NUMBER, FINISH, start_registration, get_name, get_phone_number, get_card_number, cancel_registration, finish_registration
-from utils import request_files, get_tg_nickname
+from utils import request_files, get_tg_id
 import os
 import math
 import random

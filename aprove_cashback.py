@@ -1,11 +1,9 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
-from utils import get_cashbacks, request_files, build_menu, get_tg_nickname
+from utils import get_cashbacks, request_files, build_menu, get_tg_id
 # from cashback_buttons import get_user_cashbacks, available_cashbacks_handler
 import math
 import random
-
-# ff
 
 def delete_message(update: Update):
     query = update.callback_query
@@ -85,7 +83,7 @@ def cashback_aprove_handler(update: Update, context: CallbackContext):
             for item in items:
                 compare_id = int(item["id"])
                 if compare_id == item_id:
-                    cashback = item["product"]
+                    cashback = item["cashbackAction"]
                     break
                 else:
                     continue
@@ -119,8 +117,8 @@ def cashback_aprove_handler(update: Update, context: CallbackContext):
 
     elif query.data.endswith("_aproved"):
         print("yes")
-        user_nick = update.effective_user.username
-        user_id = get_tg_nickname(user_nick).json()["data"]["id"]
+        get_tg_id = update.effective_user.id
+        user_id = get_tg_id(get_tg_id).json()["data"]["id"]
         condition = 1
 
         context.bot.send_message(chat_id=update.effective_chat.id,

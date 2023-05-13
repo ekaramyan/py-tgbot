@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
-from utils import get_cashbacks, build_menu, cashbacks_users_history, my_cashbacks, get_tg_nickname
+from utils import get_cashbacks, build_menu, cashbacks_users_history, my_cashbacks, get_tg_id
 
 # ff
 
@@ -26,13 +26,11 @@ def available_cashbacks_handler(update: Update, context: CallbackContext, status
 def get_user_cashbacks(update: Update, context: CallbackContext):
     limit = 25
     current_page = 0
-    user_nick = update.effective_user.username
-    user_id = get_tg_nickname(user_nick).json()["data"]["id"]
-    ###############################################################
-    # response = cashbacks_users_history(user_id, limit=limit, page=current_page)
-    response = get_cashbacks(status_id=0, limit=limit, page=current_page) # заглушка
-    ###############################################################
-    cashbacks_data = response.json()["data"]
+    tg_id = update.effective_user.id
+    user_id = get_tg_id(tg_id).json()["data"]["id"]
+
+    response = my_cashbacks(user_id, limit=limit, page=current_page)
+    cashbacks_data = response["data"]
     items = cashbacks_data["data"]
     total_pages = cashbacks_data["total_pages"]
     prefix = "cashback_history"
@@ -55,11 +53,13 @@ def send_pagination(update, context, items, current_page, total_pages, prefix, l
     buttons = []
 
     for i, item in enumerate(items_slice):
+        print(item)
         item_id = item["id"]
-        item_name = item["name"]
         if(prefix == 'cashback'):
+            item_name = item["name"]            
             buttons.append(InlineKeyboardButton(str(item_name), callback_data=f"cashback_details_{item_id}"))
         elif(prefix == 'cashback_history'):
+            item_name = item["cashbackAction"]["name"]
             buttons.append(InlineKeyboardButton(str(item_name), callback_data=f"cashback_aproval_{item_id}"))
 
     if current_page > 0:

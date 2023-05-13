@@ -14,7 +14,7 @@ HEADERS = {
 URL = 'http://62.217.183.218:8000/api'
 
 
-def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: str, creditCartNumber: str, tgNickname: str, bannedText: str):
+def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: str, creditCartNumber: str|None, tgNickname: str, tg_id: int ,bannedText: str):
 
     json_data = {
         'firstName': firstName,
@@ -23,6 +23,7 @@ def register_user(firstName: str, lastName: str, middleName: str, phoneNumber: s
         'phoneNumber': phoneNumber,
         'creditCartNumber': creditCartNumber,
         'tgNickname': tgNickname,
+        'tg_id': tg_id,
         'isBanned': False,
         'bannedText': bannedText,
     }
@@ -75,12 +76,12 @@ def request_files(id: int, condition: int, path_file: str):
     return response
 
 
-def get_tg_nickname(tg_nickname: str):
+def get_tg_id(tg_id: int):
 
     headers = {
         'accept': 'application/json',
     }
-    response = requests.get(URL + '/cashbacks/users/{0}'.format(tg_nickname), headers=headers)
+    response = requests.get(URL + '/cashbacks/users/{0}'.format(tg_id), headers=headers)
 
     return response
 
@@ -93,20 +94,18 @@ def my_cashbacks(user_id: int, limit: int, page: int):
         'page': page,
     }
 
-    response = requests.get(URL + '/cashbacks/{0}/contracts'.format(user_id), params=params, headers=HEADERS)
+    response = requests.get(URL + '/cashbacks/users/{0}/history'.format(user_id), params=params, headers=HEADERS)
     return response.json()
 
 
-def add_to_my_cashbacks(cashbackActionId: int, cashbackItemId: int, cashbackUserId: int, cashbackContractStatusId: int):
+def add_to_my_cashbacks( cashbackItemId: int, cashbackUserId: int):
 
     print(cashbackUserId)
     print(cashbackItemId)
 
     params = {
-        # 'cashbackActionId': cashbackActionId,
         'cashbackItemId': cashbackItemId,
         'cashbackUserId': cashbackUserId,
-        # 'cashbackContractStatusId': cashbackContractStatusId,
     }
 
     response = requests.post(URL + '/cashbacks/contracts', json=params, headers=HEADERS)

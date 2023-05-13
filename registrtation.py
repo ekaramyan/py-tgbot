@@ -1,8 +1,5 @@
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import (
-    Updater,
-    CommandHandler,
-    MessageHandler,
     ConversationHandler,
     CallbackContext,
 )
@@ -11,12 +8,12 @@ import re
 import utils
 from menu import main_menu, check_registration
 
-# ff
 # Определяем константы для состояний
 NAME, PHONE_NUMBER, CARD_NUMBER, TG_NICK, FINISH = range(5)
 
 
 CARD_NUMBER_REGEX = re.compile(r'^\d{16}$')
+
 
 def is_valid_name(name: str) -> bool:
     # Проверяем, состоит ли имя из трех слов, разделенных пробелами
@@ -29,12 +26,12 @@ def validate_card_number(card_number: str) -> bool:
 
 
 def start_registration(update: Update, context: CallbackContext) -> int:
-    user = update.effective_user
     is_registered = check_registration(update, context)
+    tg_user = update.message.from_user
     if is_registered:
         context.user_data["is_registered"] = True
         return context.bot.send_message(
-            chat_id=user["id"], text=f"{user['first_name']}, вы уже зарегестрированы")
+            chat_id=tg_user.id, text=f"{tg_user.first_name}, вы уже зарегестрированы")
     else:
         context.user_data["is_registered"] = False
         update.message.reply_text(
@@ -68,7 +65,7 @@ def get_name(update: Update, context: CallbackContext) -> int:
     context.user_data['name'] = update.message.text
 
     update.message.reply_text(
-        'Введите свой номер телефона в международном формате (например, +12345678910):'
+        'Введите свой номер телефона в международном формате (например, +12345678910), нужен номер на который привязан ваш СБП, чтобы мы смогли вам выплачивать кэшбек:'
     )
     return PHONE_NUMBER
 
@@ -86,35 +83,44 @@ def get_phone_number(update: Update, context: CallbackContext) -> int:
         return PHONE_NUMBER
     # Сохраняем введенный номер телефона в user_data
     context.user_data['phone_number'] = update.message.text
-    # Переходим в состояние CARD_NUMBER и запрашиваем номер банковской карты
+    # Переходим в состояние CARD_NUMBER и запрашиваем номер банковской карты или предлагаем пропустить
+    reply_keyboard = [['Пропустить']]
     update.message.reply_text(
-        'Введите номер вашей банковской карт в формате 16 цифр без пробелов XXXXXXXXXXXXXXXX:'
+        'Введите номер вашей банковской карты в формате 16 цифр без пробелов XXXXXXXXXXXXXXXX '
+        'или нажмите кнопку "Пропустить", если не хотите вносить эти данные:',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
     )
     return CARD_NUMBER
 
 
 def get_card_number(update: Update, context: CallbackContext) -> int:
-    # Сохраняем введенный номер банковской карты в user_data
-    card_number = update.message.text
-    if not validate_card_number(card_number):
-        update.message.reply_text(
-            'Номер банковской карты некорректный. Попробуйте снова:')
-        return CARD_NUMBER
-    context.user_data['card_number'] = card_number
+    if update.message.text.lower() == 'пропустить':
+        context.user_data['card_number'] = None
+    else:
+        # Сохраняем введенный номер банковской карты в user_data
+        card_number = update.message.text
+        if not validate_card_number(card_number):
+            update.message.reply_text(
+                'Номер банковской карты некорректный. Попробуйте снова:'
+            )
+            return CARD_NUMBER
+        context.user_data['card_number'] = card_number
 
-    username = update.message.from_user.username
+    tg_user = update.message.from_user    
+
     utils.register_user(
         firstName=context.user_data['name'].split()[1],
         lastName=context.user_data['name'].split()[0],
         middleName=context.user_data['name'].split()[-1],
         phoneNumber=context.user_data['phone_number'],
         creditCartNumber=context.user_data['card_number'],
-        tgNickname=username,
+        tgNickname=tg_user.username,
+        tg_id=tg_user.id,
         bannedText=''
     )
     # Переходим в состояние FINISH и показываем пользователю результаты регистрации
     update.message.reply_text(
-        f'@{username}, Вы успешно зарегистрированы, можете начать участие в акциях кэшбека.',
+        f'@{tg_user.username}, Вы успешно зарегистрированы, можете начать участие в акциях кэшбека.',
         reply_markup=ReplyKeyboardRemove(),
     )
     context.user_data["is_registered"] = True

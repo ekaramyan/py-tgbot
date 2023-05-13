@@ -6,7 +6,9 @@ from cashback_buttons import cashbacks_available_handler, pagination_handler, ge
 from add_cashback import cashback_details_handler
 from menu import receive_cashback
 from aprove_cashback import cashback_aprove_handler
-# ff aaa
+
+
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -26,7 +28,7 @@ updater.dispatcher.add_handler(MessageHandler(Filters.regex(
     '^(Архивные кэшбеки)$'), cashbacks_archive_handler))
 
 updater.dispatcher.add_handler(MessageHandler(Filters.regex(
-    '^(Ваши кэшбеки)$'), get_user_cashbacks))
+    '^(Ваши активные кэшбеки)$'), get_user_cashbacks))
 
 updater.dispatcher.add_handler(CallbackQueryHandler(cashback_details_handler, pattern=r"^cashback_details_.*"))
 

@@ -1,15 +1,14 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext, MessageHandler, Filters, CallbackQueryHandler
-from utils import build_menu, get_tg_nickname
+from utils import build_menu, get_tg_id
 
-# ff
 
 def check_registration(update: Update, context: CallbackContext) -> bool:
     chat_id = update.message.chat_id
     user = update.effective_user
-    tg_nickname = user.username
+    tg_id = user.id
     # tg_nickname = user.username if user else None
-    response = get_tg_nickname(tg_nickname).json()["data"]
+    response = get_tg_id(tg_id).json()["data"]
     if response:
         print("true")
         context.user_data['is_registered'] = True
@@ -29,7 +28,7 @@ ACCOUNT_KEYBOARD = ["Изменить информацию",
                     "Удалить аккаунт"]
 
 BACK_KEYBOARD = ['Назад']
-CASHBACK_KEYBOARD = ['Ваши кэшбеки',
+CASHBACK_KEYBOARD = ['Ваши активные кэшбеки',
                      'Доступные кэшбеки',
                      'Архивные кэшбеки',
                      'Назад']
