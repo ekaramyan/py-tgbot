@@ -3,7 +3,7 @@ from telegram.ext import CallbackContext
 from utils import get_cashbacks, add_to_my_cashbacks, build_menu, cashbacks_users_history, get_tg_nickname
 from cashback_buttons import get_pagination, available_cashbacks_handler
 
-
+# ff
 
 def delete_message(update: Update, context: CallbackContext):
     query = update.callback_query

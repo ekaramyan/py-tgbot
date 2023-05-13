@@ -11,7 +11,7 @@ import re
 import utils
 from menu import main_menu, check_registration
 
-
+# ff
 # Определяем константы для состояний
 NAME, PHONE_NUMBER, CARD_NUMBER, TG_NICK, FINISH = range(5)
 

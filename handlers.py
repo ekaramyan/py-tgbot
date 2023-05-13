@@ -7,7 +7,7 @@ from utils import request_files, get_tg_nickname
 import os
 import math
 import random
-
+# ff
 
 # Словарь, в котором будут храниться пользователи и их данные
 users = {}
