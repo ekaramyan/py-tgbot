@@ -6,7 +6,7 @@ from cashback_buttons import cashbacks_available_handler, pagination_handler, ge
 from add_cashback import cashback_details_handler
 from menu import receive_cashback
 from aprove_cashback import cashback_aprove_handler
-# ff
+# ff aaa
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -37,8 +37,6 @@ updater.dispatcher.add_handler(CallbackQueryHandler(pagination_handler, pattern=
 updater.dispatcher.add_handler(MessageHandler(Filters.text, receive_cashback))
 
 updater.dispatcher.add_handler(CallbackQueryHandler(button_callback))
-
-
 
 
 updater.start_polling()
