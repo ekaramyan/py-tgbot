@@ -1,13 +1,9 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
-from utils import get_cashbacks, request_files, build_menu, get_tg_id
+from utils import my_cashbacks, request_files, build_menu, get_tg_id
 # from cashback_buttons import get_user_cashbacks, available_cashbacks_handler
 import math
 import random
-
-def delete_message(update: Update):
-    query = update.callback_query
-    query.message.delete()
 
 def process_data(update: Update, context: CallbackContext, user_id, condition) -> None:
     if context.user_data.get('awaiting_file'):
@@ -52,74 +48,94 @@ def process_data(update: Update, context: CallbackContext, user_id, condition) -
                                      text="Ошибка на сервере, файл не отправлен.")
         print("Произошла ошибка при отправке файла на сервер")
 
-        
+
+def generate_cashback_message(cashback, conditions, item_id):
+    true_conditions = conditions
+
+    text = "Полные данные о кэшбеке:\n"
+    photo = cashback['cashbackAction']['photo']
+    text += f"Дней на выполнение условий: {cashback['cashbackAction']['daysAction']}\n"
+    text += f"Название: {cashback['cashbackAction']['name']}\n"
+    text += f"Выполнено: {true_conditions}/{5}\n"
+    text += f"Доступных размеров: {cashback['cashbackItem']['count']}/{cashback['cashbackItem']['remains']}\n"
+    text += f"Этапы: {cashback['cashbackAction']['actionText']}\n\n"
+    text += f"Процент кэшбека: {cashback['cashbackAction']['cashbackPercentage']}\n"
+
+    buttons = [
+        InlineKeyboardButton("Выполнить новый этап", callback_data=f"cashback_aproval_{item_id}_aproved"),
+        InlineKeyboardButton("Назад", callback_data=f"cashback_aproval_{item_id}_canceled")
+    ]
+    keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
+
+    return photo, text, keyboard
+
+
 
 
 def cashback_aprove_handler(update: Update, context: CallbackContext):
     query = update.callback_query
-    # print(f"query.data: {query.data}")
-
+    print(f"query.data: {query.data}")
     limit = 25
     current_page = 0
-    response = get_cashbacks(status_id=0, limit=limit, page=current_page)
-    cashbacks_data = response.json()["data"]
+    tg_id = update.effective_user.id
+    user_id = get_tg_id(tg_id).json()["data"]["id"]
+    response = my_cashbacks(user_id=user_id, limit=limit, page=current_page)
+    cashbacks_data = response["data"]
+
+    true_conditions = 0
 
     cashback = None
-    # {"name":None, "linkOnSite":None}
+    # cashback_id = None
 
-    item_id=None
-    cashback_id = None
+    if query.data.startswith("cashback_aproval_" or "cashback_history_"):
 
-    if query.data.startswith("cashback_aproval_"):
         item_id = query.data.replace("cashback_aproval_", "")
         # print(f"item_id: {item_id}")
         items = cashbacks_data["data"]
         cashback_id = int(item_id.split('_')[0])
 
         try:
-            item_id = int(item_id)
 
+            item_id = int(cashback_id)
 
             for item in items:
                 compare_id = int(item["id"])
                 if compare_id == item_id:
-                    cashback = item["cashbackAction"]
+                    cashback = item
                     break
                 else:
                     continue
 
             if cashback is not None:
-                text = "Полные данные о кэшбеке:\n"
-                # photo = cashback['defaultImageUrl']
-                text += f"Название: {cashback['name']}\n"
-                text += f"Этапы: {cashback['linkOnSite']}\n"
-                text += f"Текущий статус: {cashback['article']}\n"
-
-                buttons = [
-                        InlineKeyboardButton("Выполнить новый этап", callback_data=f"cashback_aproval_{item_id}_aproved"),
-                        InlineKeyboardButton("Назад", callback_data=f"cashback_aproval_{item_id}_canceled")
-                    ]
-                keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
 
 
-                query.message.reply_text(text, reply_markup=keyboard)
+                for key, value in cashback["cashbackContractStatus"].items():
+                    if key.startswith("isCondition") and value == True:
+                        true_conditions += 1
+                        # print(true_conditions)
+
+                if(not query.data.endswith("_canceled") and query.data.endswith("_aproved")):
+                    photo, text, keyboard = generate_cashback_message(cashback, true_conditions, item_id)
+                    query.message.reply_photo(photo, caption=text, reply_markup=keyboard)
+
             else:
-                print("Invalid item_id")
+                print("Invalid cashback_id")
         except ValueError:
             print("Invalid item_id")        
     else:
         print("Invalid query data format")
 
-
+    print(query.data)
     if query.data.endswith("_canceled"):
         print("no")
-        delete_message(update)
+        query.message.delete()
+        print(query.data)
 
     elif query.data.endswith("_aproved"):
         print("yes")
-        get_tg_id = update.effective_user.id
-        user_id = get_tg_id(get_tg_id).json()["data"]["id"]
-        condition = 1
+
+        if(true_conditions<5):
+            condition = true_conditions+1
 
         context.bot.send_message(chat_id=update.effective_chat.id,
                 text=f"Отправьте данные для прохождения {condition} этапа (фото, документ, голосовое сообщение или видео).")
@@ -129,7 +145,7 @@ def cashback_aprove_handler(update: Update, context: CallbackContext):
 
         process_data(update, context, user_id, condition)
         
-        print(cashback_id)
+    # print(cashback_id, 'end')
 
 
 
