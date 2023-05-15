@@ -58,7 +58,7 @@ def cashbacks_users_history(id: int, limit: int, page: int):
     return response
 
 
-def request_files(id: int, condition: int, path_file: str):
+def request_files(id: int, condition: int, path_file: any):
 
     headers = {
         'accept': 'application/json',
@@ -71,7 +71,7 @@ def request_files(id: int, condition: int, path_file: str):
     files = {
         'file': open(path_file, 'rb'),
     }
-    response = requests.patch(URL + '/cashbacks/actions/{0}/upload'.format(id), params=params, headers=headers, files=files)
+    response = requests.post(URL + '/cashbacks/contracts/{0}/upload'.format(id), params=params, headers=headers, files=files)
 
     return response
 

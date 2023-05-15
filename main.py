@@ -5,7 +5,7 @@ from handlers import start, button_callback, register_handler
 from cashback_buttons import cashbacks_available_handler, pagination_handler, get_user_cashbacks, cashbacks_archive_handler
 from add_cashback import cashback_details_handler
 from menu import receive_cashback
-from aprove_cashback import cashback_aprove_handler
+from aprove_cashback import cashback_aprove_handler, handle_file
 
 
 
@@ -40,6 +40,9 @@ updater.dispatcher.add_handler(MessageHandler(Filters.text, receive_cashback))
 
 updater.dispatcher.add_handler(CallbackQueryHandler(button_callback))
 
+updater.dispatcher.add_handler(MessageHandler(Filters.document | Filters.photo | Filters.video | Filters.voice, handle_file, pass_user_data=True))
+
+# updater.dispatcher.add_handler(MessageHandler(Filters.photo | Filters.document | Filters.voice | Filters.video, request_data))
 
 updater.start_polling()
 

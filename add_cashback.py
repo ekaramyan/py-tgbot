@@ -11,7 +11,6 @@ def delete_message(update: Update, context: CallbackContext):
 
 def cashback_details_handler(update: Update, context: CallbackContext):
     query = update.callback_query
-    # print(f"query.data: {query.data}")
 
     limit = 25
     current_page = 0
@@ -19,13 +18,11 @@ def cashback_details_handler(update: Update, context: CallbackContext):
     cashbacks_data = response.json()["data"]
 
     cashback = None
-    # {"name":None, "linkOnSite":None}
 
 
 
     if query.data.startswith("cashback_details_"):
         item_id = query.data.replace("cashback_details_", "")
-        # print(f"item_id: {item_id}")
         items = cashbacks_data["data"]
 
 
@@ -36,7 +33,7 @@ def cashback_details_handler(update: Update, context: CallbackContext):
             for item in items:
                 compare_id = int(item["id"])
                 if compare_id == item_id:
-                    cashback = item["product"]
+                    cashback = item
                     global CASHBACK_ID
                     CASHBACK_ID = item["cashbackItems"][0]["id"]
                     break
@@ -46,10 +43,11 @@ def cashback_details_handler(update: Update, context: CallbackContext):
             if cashback and CASHBACK_ID is not None:
                 CASHBACK_ID = int(CASHBACK_ID)
                 text = "Полные данные о кэшбеке:\n"
-                # photo = cashback['defaultImageUrl'] вставить тут картинку
-                text += f"Название: {cashback['name']}\n"
-                text += f"ссылка на вб: {cashback['linkOnSite']}\n"
-                text += f"артикул: {cashback['article']}\n"
+                photo = cashback['photo']
+                text += f"Название акции: {cashback['name']}\n"
+                text += f"Описание: {cashback['publishText']}\n"
+                text += f"Длительность акции: {cashback['daysAction']} (день/дня/дней)\n"
+                text += f"Процент кэшбека: {cashback['cashbackPercentage']}%\n"                
 
                 buttons = [
                         InlineKeyboardButton("Участвовать", callback_data=f"cashback_details_{item_id}_participate"),
@@ -58,7 +56,7 @@ def cashback_details_handler(update: Update, context: CallbackContext):
                 keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
 
 
-                query.message.reply_text(text, reply_markup=keyboard)
+                query.message.reply_photo(photo, caption=text, reply_markup=keyboard)
             else:
                 print("Invalid item_id")
         except ValueError:
@@ -74,7 +72,6 @@ def cashback_details_handler(update: Update, context: CallbackContext):
         if CASHBACK_ID is not None:
             tg_id = update.effective_user.id
             user_id = get_tg_id(tg_id).json()["data"]["id"]
-            print(user_id, "user id")
 
             cashbackItemId = CASHBACK_ID
 
@@ -83,7 +80,4 @@ def cashback_details_handler(update: Update, context: CallbackContext):
             response = add_to_my_cashbacks(cashbackItemId, cashbackUserId)
             delete_message(update, context)
             context.bot.send_message(chat_id=update.effective_chat.id,
-                                    text=f"Поздравляем! Вы участвуете в кэшбеке.")
-
-            
-        # на {cashback['name']}
+                                    text=f'Поздравляем! Вы участвуете в кэшбеке. для выполнения условий перейдите в меню "Мои активные кэшбеки" и выберите там кэшбек, для которого будете выполнять условия')

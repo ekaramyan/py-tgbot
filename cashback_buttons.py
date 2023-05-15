@@ -53,7 +53,6 @@ def send_pagination(update, context, items, current_page, total_pages, prefix, l
     buttons = []
 
     for i, item in enumerate(items_slice):
-        print(item)
         item_id = item["id"]
         if(prefix == 'cashback'):
             item_name = item["name"]            
