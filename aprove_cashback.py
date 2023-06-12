@@ -20,20 +20,6 @@ def handle_file(update: Update, context: CallbackContext):
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      text="Пожалуйста, отправьте файл (документ, фото, видео или голосовое сообщение).")
 
-def handle_file(update: Update, context: CallbackContext):
-    if context.user_data.get('awaiting_file'):
-        if update.message and (update.message.document or update.message.photo or update.message.video or update.message.voice):
-            file = update.message.document or update.message.photo or update.message.video or update.message.voice
-            file_obj = file[-1].get_file()  # Получаем объект файла из сообщения
-            context.user_data['awaiting_file'] = False
-            cashback_id = context.user_data.get('cashback_id')
-            condition = context.user_data.get('condition')
-            file_bytes = bytes(file_obj.download_as_bytearray())  # Преобразуем содержимое файла в тип bytes
-            process_data(update, context, cashback_id, condition, file_bytes)
-        else:
-            # Обработка случая, когда сообщение не содержит документа
-            context.bot.send_message(chat_id=update.effective_chat.id,
-                                     text="Пожалуйста, отправьте файл (документ, фото, видео или голосовое сообщение).")
 
 
 def process_data(update: Update, context: CallbackContext, cashback_id, condition, file) -> None:
@@ -52,6 +38,29 @@ def process_data(update: Update, context: CallbackContext, cashback_id, conditio
         print(f"Ошибка при отправке файла: {str(e)}")
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text="Произошла ошибка при отправке файла. Пожалуйста, попробуйте еще раз.")
+
+
+def generate_cashback_message(cashback, conditions, item_id):
+    true_conditions = conditions
+
+    text = "Полные данные о кэшбеке:\n"
+    photo = cashback['cashbackAction']['photo']
+    text += f"Дней на выполнение условий: {cashback['cashbackAction']['daysAction']}\n"
+    text += f"Название: {cashback['cashbackAction']['name']}\n"
+    text += f"Выполнено: {true_conditions}/{5}\n"
+    text += f"Доступных размеров: {cashback['cashbackItem']['count']}/{cashback['cashbackItem']['remains']}\n"
+    text += f"Этапы: {cashback['cashbackAction']['actionText']}\n\n"
+    text += f"Процент кэшбека: {cashback['cashbackAction']['cashbackPercentage']}\n"
+
+    buttons = [
+        InlineKeyboardButton("Выполнить новый этап", callback_data=f"cashback_aproval_{item_id}_aproved"),
+        InlineKeyboardButton("Назад", callback_data=f"cashback_aproval_{item_id}_canceled")
+    ]
+    keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
+
+    return photo, text, keyboard
+
+
 
 
 def cashback_aprove_handler(update: Update, context: CallbackContext):
@@ -129,27 +138,3 @@ def cashback_aprove_handler(update: Update, context: CallbackContext):
         context.user_data['condition'] = condition
 
         # request_data(update, context, cashback_id, condition)
-        
-
-
-
-
-
-
-    # if update.message.text == "Отправить фото подтверждения покупки":
-    #     context.bot.send_message(chat_id=update.effective_chat.id,
-    #                              text="Отправьте фото подтверждения покупки")
-    #     context.dispatcher.add_handler(
-    #         MessageHandler(Filters.photo, receive_photo))
-
-    #     context.job_queue.run_once(cancel_request_data, 60, context=[
-    #         update.message.chat_id, update.message.message_id])
-
-    # elif update.message.text == "Отправить видео подтверждения получения":
-    #     context.bot.send_message(chat_id=update.effective_chat.id,
-    #                              text="Отправьте видео подтверждения получения товара, желательно, где ввы отрезаете этикетку, чтобы мы были уверене, что не будет возврата товара")
-    #     context.dispatcher.add_handler(
-    #         MessageHandler(Filters.photo, receive_photo))
-
-    #     context.job_queue.run_once(cancel_request_data, 60, context=[
-    #         update.message.chat_id, update.message.message_id])
